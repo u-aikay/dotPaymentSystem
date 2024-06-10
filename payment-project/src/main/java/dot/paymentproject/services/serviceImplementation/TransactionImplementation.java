@@ -5,6 +5,7 @@ import dot.paymentproject.entities.TransactionLog;
 import dot.paymentproject.enums.AccountStatus;
 import dot.paymentproject.enums.Charges;
 import dot.paymentproject.enums.TransactionStatus;
+import dot.paymentproject.pojos.request.InflowRequest;
 import dot.paymentproject.pojos.request.TransferRequest;
 import dot.paymentproject.pojos.response.TransferResponse;
 import dot.paymentproject.repositories.AccountRepository;
@@ -54,9 +55,12 @@ public class TransactionImplementation implements TransactionInterface {
         }
         //calculate charges and confirm if user balance is sufficient
         BigDecimal charges = new BigDecimal(String.valueOf(Charges.TRANSACTION_FEE));
-        BigDecimal chargeAmount = request.getAmount().multiply(charges);
-        BigDecimal totalAmount = chargeAmount.add(request.getAmount());
+        BigDecimal commissionFee = new BigDecimal(String.valueOf(Charges.COMMISSION));
+        BigDecimal chargeAmt = request.getAmount().multiply(charges);
+        BigDecimal chargeAmount = chargeAmt.compareTo(BigDecimal.valueOf(100)) > 0 ? new BigDecimal(100) : chargeAmt;
+        BigDecimal commissionFeeAmount =  chargeAmount.multiply(commissionFee);
         BigDecimal balance = customerAccount.get().getBalance();
+        BigDecimal totalAmount = chargeAmount.add(request.getAmount());
         if (totalAmount.compareTo(balance) > 0 ){
             TransferResponse resp = TransferResponse.builder().
                     message("User balance is insufficient for this transaction")
@@ -88,6 +92,9 @@ public class TransactionImplementation implements TransactionInterface {
                     .fromAccountName(customerAccount.get().getAccountName())
                     .fromBankName("DOT BANK PLC")
                     .fromBankCode("111")
+                    .transactionFee(chargeAmount)
+                    .commissionAmount(commissionFeeAmount)
+                    .commissionDetails("0.5% NIP charges")
                     .status(TransactionStatus.SUCCESSFUL)
                     .build();
             TransferResponse resp = TransferResponse.builder().
@@ -108,6 +115,39 @@ public class TransactionImplementation implements TransactionInterface {
                     .success(true).build();
             return new ResponseEntity<>(resp, HttpStatus.EXPECTATION_FAILED);
         }
+    }
+
+    @Override
+    public ResponseEntity<TransferResponse> inflow(InflowRequest request) {
+        logger.info("transaction inflow in progress...");
+        Optional<Account> customerAccount = accountRepository.findAccountByAccountNumber(request.getBeneficiaryAccountNumber());
+        if (customerAccount.isEmpty()){
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
+        customerAccount.get().setAccountStatus(AccountStatus.PENDING);
+        accountRepository.save(customerAccount.get());
+        BigDecimal currentBalance = customerAccount.get().getBalance();
+        customerAccount.get().setBalance(currentBalance.add(request.getAmount()));
+        customerAccount.get().setAccountStatus(AccountStatus.FREE);
+        accountRepository.save(customerAccount.get());
+
+        TransactionLog transactionLog = TransactionLog.builder()
+                .amount(request.getAmount())
+                .toAccountNumber(customerAccount.get().getAccountNumber())
+                .toAccountName(customerAccount.get().getAccountName())
+                .toBankCode("111")
+                .toBankName("DOT BANK PLC")
+                .fromAccountNumber(request.getSenderAccountNumber())
+                .fromAccountName(request.getSenderAccountName())
+                .fromBankName(request.getSenderBankName())
+                .status(TransactionStatus.SUCCESSFUL)
+                .build();
+        TransferResponse resp = TransferResponse.builder().
+                message("outflow transaction completed successfully")
+                .success(true).build();
+        transactionLogRepository.save(transactionLog);
+        //return response
+        return new ResponseEntity<>(resp, HttpStatus.OK);
     }
 
     private ResponseEntity<String> mockNIBBSOutflowCall(TransferRequest request) {

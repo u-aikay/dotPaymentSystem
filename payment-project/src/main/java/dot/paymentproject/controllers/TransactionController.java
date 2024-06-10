@@ -1,5 +1,6 @@
 package dot.paymentproject.controllers;
 
+import dot.paymentproject.pojos.request.InflowRequest;
 import dot.paymentproject.pojos.request.TransferRequest;
 import dot.paymentproject.pojos.response.TransferResponse;
 import dot.paymentproject.services.serviceInterface.TransactionInterface;
@@ -22,5 +23,11 @@ public class TransactionController {
     public ResponseEntity<TransferResponse> outflowTransaction(TransferRequest request) {
         logger.info("transaction outflow initiated...");
         return transactionInterface.outflow(request);
+    }
+
+    @PostMapping("inflow")
+    public ResponseEntity<TransferResponse> inflowTransaction(InflowRequest request){
+        logger.info("transaction inflow initiated");
+        return transactionInterface.inflow(request);
     }
 }

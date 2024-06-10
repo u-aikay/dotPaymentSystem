@@ -23,10 +23,11 @@ public class TransactionLog implements Serializable {
     private Long id;
     private String transactionReference;
     private BigDecimal amount;
-    private BigDecimal fees;
+    private BigDecimal transactionFee;
     private String description;
     private TransactionStatus status;
     private String commissionDetails;
+    private BigDecimal commissionAmount;
     private String fromAccountNumber;
     private String fromAccountName;
     private String fromBankName;
