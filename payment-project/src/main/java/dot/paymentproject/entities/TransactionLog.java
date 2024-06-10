@@ -1,14 +1,12 @@
 package dot.paymentproject.entities;
 
 import dot.paymentproject.enums.TransactionStatus;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.Date;
 
 @Entity
 @Builder
@@ -36,5 +34,10 @@ public class TransactionLog implements Serializable {
     private String toAccountName;
     private String toBankName;
     private String toBankCode;
+    @Column(updatable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date createdAt;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date updatedAt;
 
 }

@@ -7,6 +7,7 @@ import dot.paymentproject.enums.Charges;
 import dot.paymentproject.enums.TransactionStatus;
 import dot.paymentproject.pojos.request.InflowRequest;
 import dot.paymentproject.pojos.request.TransferRequest;
+import dot.paymentproject.pojos.response.CustomPageResponse;
 import dot.paymentproject.pojos.response.TransferResponse;
 import dot.paymentproject.repositories.AccountRepository;
 import dot.paymentproject.repositories.TransactionLogRepository;
@@ -14,6 +15,10 @@ import dot.paymentproject.services.serviceInterface.TransactionInterface;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -34,15 +39,15 @@ public class TransactionImplementation implements TransactionInterface {
         logger.info("transaction outflow in progress...");
         //get customer wallet
         Optional<Account> customerAccount = accountRepository.findAccountByAccountNumber(request.getSenderAccountNumber());
-        if (customerAccount.isEmpty()){
+        if (customerAccount.isEmpty()) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
         //confirm user pin is correct
         //NOTE: on normal setup pin is not meant to be moved around in plain text
-        if (!customerAccount.get().getPin().equals(request.getPin())){
+        if (!customerAccount.get().getPin().equals(request.getPin())) {
             return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
         }
-        if (customerAccount.get().getAccountStatus().equals(AccountStatus.PENDING)){
+        if (customerAccount.get().getAccountStatus().equals(AccountStatus.PENDING)) {
             TransferResponse resp = TransferResponse.builder().
                     message("resource in use, please try again later")
                     .success(false).build();
@@ -58,10 +63,10 @@ public class TransactionImplementation implements TransactionInterface {
         BigDecimal commissionFee = new BigDecimal(String.valueOf(Charges.COMMISSION));
         BigDecimal chargeAmt = request.getAmount().multiply(charges);
         BigDecimal chargeAmount = chargeAmt.compareTo(BigDecimal.valueOf(100)) > 0 ? new BigDecimal(100) : chargeAmt;
-        BigDecimal commissionFeeAmount =  chargeAmount.multiply(commissionFee);
+        BigDecimal commissionFeeAmount = chargeAmount.multiply(commissionFee);
         BigDecimal balance = customerAccount.get().getBalance();
         BigDecimal totalAmount = chargeAmount.add(request.getAmount());
-        if (totalAmount.compareTo(balance) > 0 ){
+        if (totalAmount.compareTo(balance) > 0) {
             TransferResponse resp = TransferResponse.builder().
                     message("User balance is insufficient for this transaction")
                     .success(false).build();
@@ -79,7 +84,7 @@ public class TransactionImplementation implements TransactionInterface {
         //send transaction via NIBBS to beneficiary bank
         ResponseEntity<String> callNIBBS = mockNIBBSOutflowCall(request);
 
-        if (callNIBBS.getBody().equals("000")){
+        if (callNIBBS.getBody().equals("000")) {
             //on success
             //update transaction log with corresponding data
             TransactionLog transactionLog = TransactionLog.builder()
@@ -103,7 +108,7 @@ public class TransactionImplementation implements TransactionInterface {
             transactionLogRepository.save(transactionLog);
             //return response
             return new ResponseEntity<>(resp, HttpStatus.OK);
-        }else {
+        } else {
             //REVERSAL
             customerAccount.get().setAccountStatus(AccountStatus.PENDING);
             accountRepository.save(customerAccount.get());
@@ -121,7 +126,7 @@ public class TransactionImplementation implements TransactionInterface {
     public ResponseEntity<TransferResponse> inflow(InflowRequest request) {
         logger.info("transaction inflow in progress...");
         Optional<Account> customerAccount = accountRepository.findAccountByAccountNumber(request.getBeneficiaryAccountNumber());
-        if (customerAccount.isEmpty()){
+        if (customerAccount.isEmpty()) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
         customerAccount.get().setAccountStatus(AccountStatus.PENDING);
@@ -148,6 +153,16 @@ public class TransactionImplementation implements TransactionInterface {
         transactionLogRepository.save(transactionLog);
         //return response
         return new ResponseEntity<>(resp, HttpStatus.OK);
+    }
+
+    @Override
+    public CustomPageResponse<TransactionLog> getLog(int page, int size, String startDate, String endDate) {
+        logger.info("fetch transaction log in progress");
+        if (page < 0) page = 0;
+        if (size < 1) size = 10;
+        Pageable pageable = PageRequest.of(page, size, Sort.by("created_at").descending());
+        Page<TransactionLog> transactionLogs = transactionLogRepository.findAllByCreatedAt(pageable);
+        return new CustomPageResponse<>(true, page, (int) transactionLogs.getTotalElements(), transactionLogs.getNumberOfElements(), transactionLogs.getContent());
     }
 
     private ResponseEntity<String> mockNIBBSOutflowCall(TransferRequest request) {
