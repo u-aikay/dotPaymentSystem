@@ -4,13 +4,13 @@ import lombok.Getter;
 
 @Getter
 public enum Charges {
-    TRANSACTION_FEE(0.005),
-    COMMISSION(0.2),
-    VAT(0.075);
+    TRANSACTION_FEE("0.005"),
+    COMMISSION("0.2"),
+    VAT("0.075");
 
-    private final Double percentageValue;
+    private final String percentageValue;
 
-    Charges(Double percentageValue) {
+    Charges(String percentageValue) {
         this.percentageValue = percentageValue;
     }
 }

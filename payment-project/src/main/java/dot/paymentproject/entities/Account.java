@@ -28,6 +28,7 @@ public class Account implements Serializable {
     private String email;
     @Column(unique = true, nullable = false)
     private String uuid;
+    private String pin;
     private BigDecimal balance;
     private AccountStatus accountStatus;
     private Boolean active = true;
