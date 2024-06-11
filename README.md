@@ -2,7 +2,7 @@
 
 # Money Transfer Simulation Web Application
 
-This project simulates a money transfer operation between two bank accounts, inspired by the NIBSS Instant Payments (NIP) system. The application is built using Java 11+ and Spring Boot, and it includes REST endpoints for processing transfer requests, retrieving transaction lists, and generating transaction summaries. Additionally, the application features scheduled operations for commission calculations and daily transaction summaries.
+This project simulates a money transfer operation between two bank accounts, inspired by the NIBSS Instant Payments (NIP) system. The application is built using Java 21 and Spring Boot, and it includes REST endpoints for processing transfer requests, retrieving transaction lists, and generating transaction summaries. Additionally, the application features scheduled operations for commission calculations and daily transaction summaries.
 
 ## Features
 
