@@ -177,7 +177,6 @@ public class TransactionImplementation implements TransactionInterface {
         LocalDate today = LocalDate.now();
         LocalDate ystdy = today.minusDays(1);
         Date yesterday = convertToDateViaInstant(ystdy);
-        Date endDate = convertToDateViaInstant(ystdy.plusDays(1));
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         String formattedDate = ystdy.format(formatter);
