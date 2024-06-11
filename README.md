@@ -24,7 +24,8 @@ This project simulates a money transfer operation between two bank accounts, ins
 - Apache Maven 3.8.3
 
 ## Setup and Execution
-
+- Postman API documentation has been included in the project resource folder
+  
 ### Running the Application
 
 1. **Clone the Repository**
