@@ -2,15 +2,18 @@ package dot.paymentproject.services.serviceImplementation;
 
 import com.opencsv.CSVWriter;
 import dot.paymentproject.entities.Account;
+import dot.paymentproject.entities.Commission;
 import dot.paymentproject.entities.TransactionLog;
 import dot.paymentproject.enums.AccountStatus;
 import dot.paymentproject.enums.Charges;
+import dot.paymentproject.enums.CommissionStatus;
 import dot.paymentproject.enums.TransactionStatus;
 import dot.paymentproject.pojos.request.InflowRequest;
 import dot.paymentproject.pojos.request.TransferRequest;
 import dot.paymentproject.pojos.response.CustomPageResponse;
 import dot.paymentproject.pojos.response.TransferResponse;
 import dot.paymentproject.repositories.AccountRepository;
+import dot.paymentproject.repositories.CommissionRepository;
 import dot.paymentproject.repositories.TransactionLogRepository;
 import dot.paymentproject.services.serviceInterface.TransactionInterface;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +42,7 @@ import java.util.Optional;
 public class TransactionImplementation implements TransactionInterface {
     private final AccountRepository accountRepository;
     private final TransactionLogRepository transactionLogRepository;
+    private final CommissionRepository commissionRepository;
 
     Logger logger = LoggerFactory.getLogger(TransactionImplementation.class);
 
@@ -164,12 +168,23 @@ public class TransactionImplementation implements TransactionInterface {
     }
 
     @Override
-    public CustomPageResponse<TransactionLog> getLog(int page, int size, String startDate, String endDate) {
-        logger.info("fetch transaction log in progress");
+    public CustomPageResponse<TransactionLog> getLogByStatus(int page, int size, String startDate, String endDate, String status) {
+        logger.info("fetch transaction log by status in progress...");
+        if (page < 0) page = 0;
+        if (size < 1) size = 10;
+        TransactionStatus transactionStatus = TransactionStatus.valueOf(status);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("created_at").descending());
+        Page<TransactionLog> transactionLogs = transactionLogRepository.findAllByCreatedAtAndStatus(pageable, transactionStatus);
+        return new CustomPageResponse<>(true, page, (int) transactionLogs.getTotalElements(), transactionLogs.getNumberOfElements(), transactionLogs.getContent());
+    }
+
+    @Override
+    public CustomPageResponse<TransactionLog> getLogByAcctId(int page, int size, String startDate, String endDate, String accountId) {
+        logger.info("fetch transaction log by accountId in progress");
         if (page < 0) page = 0;
         if (size < 1) size = 10;
         Pageable pageable = PageRequest.of(page, size, Sort.by("created_at").descending());
-        Page<TransactionLog> transactionLogs = transactionLogRepository.findAllByCreatedAt(pageable);
+        Page<TransactionLog> transactionLogs = transactionLogRepository.findAllByCreatedAtAndFromAccountName(pageable, accountId);
         return new CustomPageResponse<>(true, page, (int) transactionLogs.getTotalElements(), transactionLogs.getNumberOfElements(), transactionLogs.getContent());
     }
 
@@ -224,6 +239,20 @@ public class TransactionImplementation implements TransactionInterface {
             e.printStackTrace();
         }
 
+    }
+
+    public void getCommissionableTransactions() {
+        List<TransactionLog> transactionLogs = transactionLogRepository.findAllByCommissionPickedAndStatus(false, TransactionStatus.SUCCESSFUL);
+        for (TransactionLog transaction : transactionLogs) {
+            Commission commission = Commission.builder()
+                    .commissionStatus(CommissionStatus.PENDING)
+                    .transactionId(transaction.getId())
+                    .transactionRef(transaction.getTransactionReference())
+                    .commissionAmount(transaction.getCommissionAmount())
+                    .createdAt(new Date())
+                    .build();
+            commissionRepository.save(commission);
+        }
     }
 
     private ResponseEntity<String> mockNIBBSOutflowCall(TransferRequest request) {

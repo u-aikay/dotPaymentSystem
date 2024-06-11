@@ -20,4 +20,11 @@ public class TransactionTask {
         logger.info("running cron job to pick end of the day transaction...");
         transactionImplementation.getDailySummary();
     }
+
+    @Scheduled(cron = "0 30 0 * * *")
+    @SchedulerLock(name = "commission_cron", lockAtLeastForString = "PT5M", lockAtMostForString = "PT14M")
+    public void commissionCron() {
+        logger.info("running cron job to pick commission worthy transactions...");
+        transactionImplementation.getCommissionableTransactions();
+    }
 }

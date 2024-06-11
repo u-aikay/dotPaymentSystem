@@ -53,10 +53,21 @@ public class TransactionController {
      * @param endDate The end date for the transaction log.
      * @return Returns a custom page response containing the transaction logs.
      */
-    @GetMapping("get_transaction_log")
-    public CustomPageResponse<TransactionLog> getTransactionLog(@RequestParam("page") int page, @RequestParam("size") int size,
-                                                                @RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate){
-        logger.info("fetch transaction log initiated...");
-        return transactionInterface.getLog(page,size,startDate,endDate);
+    //todo: bystatus -done
+    @GetMapping("get_transaction_log/status")
+    public CustomPageResponse<TransactionLog> getTransactionLogbyStatus(@RequestParam("page") int page, @RequestParam("size") int size,
+                                                                        @RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate,
+                                                                        @RequestParam("status") String status){
+        logger.info("fetch transaction log by status initiated...");
+        return transactionInterface.getLogByStatus(page,size,startDate,endDate, status);
+    }
+
+    //todo: by accountId
+    @GetMapping("get_transaction_log/account")
+    public CustomPageResponse<TransactionLog> getTransactionLogByAccount(@RequestParam("page") int page, @RequestParam("size") int size,
+                                                                         @RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate,
+                                                                         @RequestParam("accountId")String accountId){
+        logger.info("fetch transaction log by accountId initiated...");
+        return transactionInterface.getLogByAcctId(page,size,startDate,endDate, accountId);
     }
 }

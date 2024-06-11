@@ -58,11 +58,11 @@ class TransactionControllerTest {
     @Test
     void getTransactionLogShouldReturnExpectedResponse() {
         CustomPageResponse<TransactionLog> expectedResponse = new CustomPageResponse<>(true,0,10,0L,Collections.emptyList() );
-        when(transactionInterface.getLog(anyInt(), anyInt(), anyString(), anyString())).thenReturn(expectedResponse);
+        when(transactionInterface.getLogByStatus(anyInt(), anyInt(), anyString(), anyString(), anyString())).thenReturn(expectedResponse);
 
-        CustomPageResponse<TransactionLog> actualResponse = transactionController.getTransactionLog(1, 10, "2022-01-01", "2022-12-31");
+        CustomPageResponse<TransactionLog> actualResponse = transactionController.getTransactionLogbyStatus(1, 10, "2022-01-01", "2022-12-31", "successful");
 
         assertEquals(expectedResponse, actualResponse);
-        verify(transactionInterface, times(1)).getLog(1, 10, "2022-01-01", "2022-12-31");
+        verify(transactionInterface, times(1)).getLogByStatus(1, 10, "2022-01-01", "2022-12-31", "successful");
     }
 }

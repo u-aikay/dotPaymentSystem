@@ -12,5 +12,7 @@ public interface TransactionInterface {
 
     ResponseEntity<TransferResponse> inflow(InflowRequest request);
 
-    CustomPageResponse<TransactionLog> getLog(int page, int size, String startDate, String endDate);
+    CustomPageResponse<TransactionLog> getLogByStatus(int page, int size, String startDate, String endDate, String status);
+
+    CustomPageResponse<TransactionLog> getLogByAcctId(int page, int size, String startDate, String endDate, String accountId);
 }

@@ -26,6 +26,7 @@ public class TransactionLog implements Serializable {
     private TransactionStatus status;
     private String commissionDetails;
     private BigDecimal commissionAmount;
+    private Boolean commissionPicked = false;
     private String fromAccountNumber;
     private String fromAccountName;
     private String fromBankName;
