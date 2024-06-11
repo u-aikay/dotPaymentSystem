@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
 
+import java.text.ParseException;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -56,7 +57,7 @@ class TransactionControllerTest {
     }
 
     @Test
-    void getTransactionLogShouldReturnExpectedResponse() {
+    void getTransactionLogShouldReturnExpectedResponse() throws ParseException {
         CustomPageResponse<TransactionLog> expectedResponse = new CustomPageResponse<>(true,0,10,0L,Collections.emptyList() );
         when(transactionInterface.getLogByStatus(anyInt(), anyInt(), anyString(), anyString(), anyString())).thenReturn(expectedResponse);
 

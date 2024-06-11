@@ -13,4 +13,5 @@ public enum Charges {
     Charges(String percentageValue) {
         this.percentageValue = percentageValue;
     }
+
 }

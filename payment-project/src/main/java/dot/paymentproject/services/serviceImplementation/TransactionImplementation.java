@@ -30,6 +30,8 @@ import org.springframework.stereotype.Service;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -71,8 +73,8 @@ public class TransactionImplementation implements TransactionInterface {
             return new ResponseEntity<>(resp, HttpStatus.FORBIDDEN);
         }
         //calculate charges and confirm if user balance is sufficient
-        BigDecimal charges = new BigDecimal(String.valueOf(Charges.TRANSACTION_FEE));
-        BigDecimal commissionFee = new BigDecimal(String.valueOf(Charges.COMMISSION));
+        BigDecimal charges = new BigDecimal(String.valueOf(Charges.TRANSACTION_FEE.getPercentageValue()));
+        BigDecimal commissionFee = new BigDecimal(String.valueOf(Charges.COMMISSION.getPercentageValue()));
         BigDecimal chargeAmt = request.getAmount().multiply(charges);
         BigDecimal chargeAmount = chargeAmt.compareTo(BigDecimal.valueOf(100)) > 0 ? new BigDecimal(100) : chargeAmt;
         BigDecimal commissionFeeAmount = chargeAmount.multiply(commissionFee);
@@ -99,8 +101,11 @@ public class TransactionImplementation implements TransactionInterface {
         if (callNIBBS.getBody().equals("000")) {
             //on success
             //update transaction log with corresponding data
+            String ref = "DOT-" + System.currentTimeMillis();
+            String desc = "Transfer to " + request.getBeneficiaryAccountName();
             TransactionLog transactionLog = TransactionLog.builder()
                     .amount(request.getAmount())
+                    .accountId(request.getSenderAccountNumber())
                     .toAccountNumber(request.getBeneficiaryAccountNumber())
                     .toAccountName(request.getBeneficiaryAccountName())
                     .toBankCode(request.getDestinationBankCode())
@@ -112,7 +117,12 @@ public class TransactionImplementation implements TransactionInterface {
                     .transactionFee(chargeAmount)
                     .commissionAmount(commissionFeeAmount)
                     .commissionDetails("0.5% NIP charges")
+                    .commissionPicked(false)
+                    .transactionReference(ref)
+                    .description(desc)
                     .status(TransactionStatus.SUCCESSFUL)
+                    .direction("DEBIT")
+                    .createdAt(new Date())
                     .build();
             TransferResponse resp = TransferResponse.builder().
                     message("outflow transaction completed successfully")
@@ -148,19 +158,26 @@ public class TransactionImplementation implements TransactionInterface {
         customerAccount.get().setAccountStatus(AccountStatus.FREE);
         accountRepository.save(customerAccount.get());
 
+        String ref = "DOT-" + System.currentTimeMillis();
+        String desc = "Credit from " + request.getSenderAccountName();
         TransactionLog transactionLog = TransactionLog.builder()
                 .amount(request.getAmount())
+                .accountId(request.getBeneficiaryAccountNumber())
                 .toAccountNumber(customerAccount.get().getAccountNumber())
-                .toAccountName(customerAccount.get().getAccountName())
+                .toAccountName(customerAccount.get().getAccountName().toUpperCase())
                 .toBankCode("111")
                 .toBankName("DOT BANK PLC")
                 .fromAccountNumber(request.getSenderAccountNumber())
                 .fromAccountName(request.getSenderAccountName())
                 .fromBankName(request.getSenderBankName())
+                .direction("CREDIT")
+                .transactionReference(ref)
+                .description(desc)
                 .status(TransactionStatus.SUCCESSFUL)
+                .createdAt(new Date())
                 .build();
         TransferResponse resp = TransferResponse.builder().
-                message("outflow transaction completed successfully")
+                message("inflow transaction completed successfully")
                 .success(true).build();
         transactionLogRepository.save(transactionLog);
         //return response
@@ -168,23 +185,25 @@ public class TransactionImplementation implements TransactionInterface {
     }
 
     @Override
-    public CustomPageResponse<TransactionLog> getLogByStatus(int page, int size, String startDate, String endDate, String status) {
+    public CustomPageResponse<TransactionLog> getLogByStatus(int page, int size, String startDate, String endDate, String status) throws ParseException {
         logger.info("fetch transaction log by status in progress...");
         if (page < 0) page = 0;
         if (size < 1) size = 10;
         TransactionStatus transactionStatus = TransactionStatus.valueOf(status);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Pageable pageable = PageRequest.of(page, size, Sort.by("created_at").descending());
-        Page<TransactionLog> transactionLogs = transactionLogRepository.findAllByCreatedAtAndStatus(pageable, transactionStatus);
+        Page<TransactionLog> transactionLogs = transactionLogRepository.findAllByCreatedAtAndStatus(sdf.parse(startDate),sdf.parse(endDate),transactionStatus,pageable);
         return new CustomPageResponse<>(true, page, (int) transactionLogs.getTotalElements(), transactionLogs.getNumberOfElements(), transactionLogs.getContent());
     }
 
     @Override
-    public CustomPageResponse<TransactionLog> getLogByAcctId(int page, int size, String startDate, String endDate, String accountId) {
+    public CustomPageResponse<TransactionLog> getLogByAcctId(int page, int size, String startDate, String endDate, String accountId) throws ParseException {
         logger.info("fetch transaction log by accountId in progress");
         if (page < 0) page = 0;
         if (size < 1) size = 10;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Pageable pageable = PageRequest.of(page, size, Sort.by("created_at").descending());
-        Page<TransactionLog> transactionLogs = transactionLogRepository.findAllByCreatedAtAndFromAccountName(pageable, accountId);
+        Page<TransactionLog> transactionLogs = transactionLogRepository.findAllByCreatedAtAndFromAccountName(sdf.parse(startDate),sdf.parse(endDate),accountId,pageable);
         return new CustomPageResponse<>(true, page, (int) transactionLogs.getTotalElements(), transactionLogs.getNumberOfElements(), transactionLogs.getContent());
     }
 

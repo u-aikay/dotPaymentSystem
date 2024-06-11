@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.ParseException;
+
 /**
  * This is the main controller for handling transaction related requests.
  * It provides endpoints for initiating outflow and inflow transactions and for fetching transaction logs.
@@ -29,7 +31,7 @@ public class TransactionController {
      * @return Returns a response entity containing the result of the transaction.
      */
     @PostMapping("outflow")
-    public ResponseEntity<TransferResponse> outflowTransaction(TransferRequest request) {
+    public ResponseEntity<TransferResponse> outflowTransaction(@RequestBody TransferRequest request) {
         logger.info("transaction outflow initiated...");
         return transactionInterface.outflow(request);
     }
@@ -40,13 +42,13 @@ public class TransactionController {
      * @return Returns a response entity containing the result of the transaction.
      */
     @PostMapping("inflow")
-    public ResponseEntity<TransferResponse> inflowTransaction(InflowRequest request){
+    public ResponseEntity<TransferResponse> inflowTransaction(@RequestBody InflowRequest request){
         logger.info("transaction inflow initiated");
         return transactionInterface.inflow(request);
     }
 
     /**
-     * This endpoint is used to fetch transaction logs.
+     * This endpoint is used to fetch transaction logs by status.
      * @param page The page number for pagination.
      * @param size The number of records per page for pagination.
      * @param startDate The start date for the transaction log.
@@ -57,7 +59,7 @@ public class TransactionController {
     @GetMapping("get_transaction_log/status")
     public CustomPageResponse<TransactionLog> getTransactionLogbyStatus(@RequestParam("page") int page, @RequestParam("size") int size,
                                                                         @RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate,
-                                                                        @RequestParam("status") String status){
+                                                                        @RequestParam("status") String status) throws ParseException {
         logger.info("fetch transaction log by status initiated...");
         return transactionInterface.getLogByStatus(page,size,startDate,endDate, status);
     }
@@ -66,7 +68,7 @@ public class TransactionController {
     @GetMapping("get_transaction_log/account")
     public CustomPageResponse<TransactionLog> getTransactionLogByAccount(@RequestParam("page") int page, @RequestParam("size") int size,
                                                                          @RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate,
-                                                                         @RequestParam("accountId")String accountId){
+                                                                         @RequestParam("accountId")String accountId) throws ParseException {
         logger.info("fetch transaction log by accountId initiated...");
         return transactionInterface.getLogByAcctId(page,size,startDate,endDate, accountId);
     }

@@ -1,0 +1,162 @@
+{
+	"info": {
+		"_postman_id": "2382ab9d-16cc-4176-b0b4-f12f75ffc41f",
+		"name": "DOT-PAYMENT-PROJECT",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "20544092"
+	},
+	"item": [
+		{
+			"name": "OUTFLOW TRANSACTION",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"pin\": \"1234\",\n  \"amount\": 10000.50,\n  \"currencyCode\": \"NGN\",\n  \"senderAccountNumber\": \"0012345678\",\n  \"destinationBankCode\": \"111\",\n  \"nameEnquirySessionId\": \"name_enquiry_session_id\",\n  \"beneficiaryAccountNumber\": \"0012345680\",\n  \"beneficiaryAccountName\": \"Bert Enoch\",\n  \"beneficiaryBankName\": \"DOT BANK PLC\",\n  \"narration\": \"DOT-20240610\",\n  \"channelCode\": \"00\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:5190/api/v1/dot/transaction/outflow",
+					"host": [
+						"localhost"
+					],
+					"port": "5190",
+					"path": [
+						"api",
+						"v1",
+						"dot",
+						"transaction",
+						"outflow"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "INFLOW TRANSACTION",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"pin\": \"1234\",\n  \"amount\": 1000.50,\n  \"currencyCode\": \"NGN\",\n  \"senderAccountNumber\": \"0012345678\",\n  \"senderAccountName\": \"Uche Ikenna\",\n  \"destinationBankCode\": \"111\",\n  \"nameEnquirySessionId\": \"name_enquiry_session_id\",\n  \"beneficiaryAccountNumber\": \"0012345680\",\n  \"beneficiaryAccountName\": \"Bert Enoch\",\n  \"beneficiaryBankName\": \"DOT BANK PLC\",\n  \"narration\": \"DOT-20240610\",\n  \"channelCode\": \"00\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:5190/api/v1/dot/transaction/inflow",
+					"host": [
+						"localhost"
+					],
+					"port": "5190",
+					"path": [
+						"api",
+						"v1",
+						"dot",
+						"transaction",
+						"inflow"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "FETCH TRANSACTION BY STATUS",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:5190/api/v1/dot/transaction/get_transaction_log/status?startDate=2024-06-10&endDate=2024-06-12&status=SUCCESSFUL&page=0&size=10",
+					"host": [
+						"localhost"
+					],
+					"port": "5190",
+					"path": [
+						"api",
+						"v1",
+						"dot",
+						"transaction",
+						"get_transaction_log",
+						"status"
+					],
+					"query": [
+						{
+							"key": "startDate",
+							"value": "2024-06-10"
+						},
+						{
+							"key": "endDate",
+							"value": "2024-06-12"
+						},
+						{
+							"key": "status",
+							"value": "SUCCESSFUL"
+						},
+						{
+							"key": "page",
+							"value": "0"
+						},
+						{
+							"key": "size",
+							"value": "10"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "FETCH TRANSACTION BY ACCOUNT_ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:5190/api/v1/dot/transaction/get_transaction_log/account?startDate=2024-06-10&endDate=2024-06-12&accountId=0012345678&page=0&size=10",
+					"host": [
+						"localhost"
+					],
+					"port": "5190",
+					"path": [
+						"api",
+						"v1",
+						"dot",
+						"transaction",
+						"get_transaction_log",
+						"account"
+					],
+					"query": [
+						{
+							"key": "startDate",
+							"value": "2024-06-10"
+						},
+						{
+							"key": "endDate",
+							"value": "2024-06-12"
+						},
+						{
+							"key": "accountId",
+							"value": "0012345678"
+						},
+						{
+							"key": "page",
+							"value": "0"
+						},
+						{
+							"key": "size",
+							"value": "10"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

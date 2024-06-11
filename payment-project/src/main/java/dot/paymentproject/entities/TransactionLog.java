@@ -21,6 +21,7 @@ public class TransactionLog implements Serializable {
     private Long id;
     private String transactionReference;
     private BigDecimal amount;
+    private String accountId;
     private BigDecimal transactionFee;
     private String description;
     private TransactionStatus status;
@@ -35,6 +36,7 @@ public class TransactionLog implements Serializable {
     private String toAccountName;
     private String toBankName;
     private String toBankCode;
+    private String direction;
     @Column(updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
