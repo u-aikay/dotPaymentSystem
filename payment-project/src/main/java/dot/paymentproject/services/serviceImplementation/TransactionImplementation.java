@@ -182,7 +182,7 @@ public class TransactionImplementation implements TransactionInterface {
         String formattedDate = ystdy.format(formatter);
 
         List<TransactionLog> transactionLogs = transactionLogRepository.findAllByCreatedAtAndStatus(yesterday, TransactionStatus.SUCCESSFUL);
-        String csvFilePath = "src/main/resources/transaction_logs/transaction_log_" + formattedDate + ".csv";
+        String csvFilePath = "src/main/resources/transactionlogs/transaction_log_" + formattedDate + ".csv";
         //write to csv
         writeTransactionsToCSV(transactionLogs, csvFilePath);
     }
