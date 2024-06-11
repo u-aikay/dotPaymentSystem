@@ -1,5 +1,6 @@
 package dot.paymentproject.services.serviceImplementation;
 
+import com.opencsv.CSVWriter;
 import dot.paymentproject.entities.Account;
 import dot.paymentproject.entities.TransactionLog;
 import dot.paymentproject.enums.AccountStatus;
@@ -23,7 +24,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -165,7 +173,65 @@ public class TransactionImplementation implements TransactionInterface {
         return new CustomPageResponse<>(true, page, (int) transactionLogs.getTotalElements(), transactionLogs.getNumberOfElements(), transactionLogs.getContent());
     }
 
+    public void getDailySummary() {
+        LocalDate today = LocalDate.now();
+        LocalDate ystdy = today.minusDays(1);
+        Date yesterday = convertToDateViaInstant(ystdy);
+        Date endDate = convertToDateViaInstant(ystdy.plusDays(1));
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        String formattedDate = ystdy.format(formatter);
+
+        List<TransactionLog> transactionLogs = transactionLogRepository.findAllByCreatedAtAndStatus(yesterday, TransactionStatus.SUCCESSFUL);
+        String csvFilePath = "src/main/resources/transaction_logs/transaction_log_" + formattedDate + ".csv";
+        //write to csv
+        writeTransactionsToCSV(transactionLogs, csvFilePath);
+    }
+
+    private void writeTransactionsToCSV(List<TransactionLog> transactionLogs, String csvFilePath) {
+        long sn = 1L;
+        try (CSVWriter writer = new CSVWriter(new FileWriter(csvFilePath))) {
+            // Write header
+            writer.writeNext(new String[]{"S/N","TRANSACTION-REFERENCE", "AMOUNT", "TRANSACTION-FEE", "DESCRIPTION", "STATUS",
+                    "COMMISSION-DETAILS", "COMMISSION-AMOUNT", "FROM-ACCOUNT-NUMBER", "FROM-ACCOUNT-NAME", "FROM-BANK-NAME",
+                    "FROM-BANK-CODE", "TO-ACCOUNT-NUMBER", "TO-ACCOUNT-NAME", "TO-BANK-NAME", "TO-BANK-CODE", "CREATED-AT", "UPDATED-AT"});
+
+            // Write transactionLog data
+            for (TransactionLog transaction : transactionLogs) {
+                writer.writeNext(new String[]{
+                        Long.toString(sn),
+                        transaction.getTransactionReference(),
+                        transaction.getAmount().toString(),
+                        transaction.getTransactionFee().toString(),
+                        transaction.getDescription(),
+                        transaction.getStatus().toString(),
+                        transaction.getCommissionDetails(),
+                        transaction.getCommissionAmount().toString(),
+                        transaction.getFromAccountNumber(),
+                        transaction.getFromAccountName(),
+                        transaction.getFromBankName(),
+                        transaction.getFromBankCode(),
+                        transaction.getToAccountNumber(),
+                        transaction.getToAccountName(),
+                        transaction.getToBankName(),
+                        transaction.getToBankCode(),
+                        transaction.getCreatedAt().toString(),
+                        transaction.getUpdatedAt().toString()
+                });
+                sn++;
+            }
+        } catch (IOException e) {
+            logger.info("Error occurred while writing transaction logs to csv file");
+            e.printStackTrace();
+        }
+
+    }
+
     private ResponseEntity<String> mockNIBBSOutflowCall(TransferRequest request) {
         return new ResponseEntity<>("000", HttpStatus.OK);
+    }
+
+    public Date convertToDateViaInstant(LocalDate dateToConvert) {
+        return Date.from(dateToConvert.atStartOfDay(ZoneId.systemDefault()).toInstant());
     }
 }
